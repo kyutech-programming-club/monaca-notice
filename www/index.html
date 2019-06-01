@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    var apiKey = "bdc6f2bf11c8aedcaf7f1cd708367bdb72dd92246c89beee4453cc4d4567b898";
+    var cKey = "bb9d4ae9ccca0caf66cecc19f91bd3baeb90094d99470444fa11ba3b6002e9a9";
+    var deviceId;
+    // ons.ready(function() {
+    //   console.log("Onsen UI is ready!");
+    //   window.NCMB.monaca.setDeviceToken(
+    //     apiKey,
+    //     cKey
+    //   )
+    // });
+
+
+    document.addEventListener("deviceready", function()
+            {
+                // プッシュ通知受信時のコールバックを登録します
+                window.NCMB.monaca.setHandler
+                (
+                    function(jsonData, data2){
+                        // 送信時に指定したJSONが引数として渡されます
+                        console.log("callback :::" + JSON.stringify(jsonData));
+                        console.log("data2 :::" + JSON.stringify(data2));
+                    }
+                );
+
+                var successCallback = function () {
+                    //端末登録後の処理
+                };
+                var errorCallback = function (err) {
+                    //端末登録でエラーが発生した場合の処理
+                };
+                // デバイストークンを取得してinstallation登録が行われます
+                // ※ YOUR_APPLICATION_KEY,YOUR_CLIENT_KEYはニフクラ mobile backendから発行されたAPIキーに書き換えてください
+                window.NCMB.monaca.setDeviceToken(
+                    apiKey,
+                    cKey,
+                    successCallback,
+                    errorCallback
+                );
+
+                getInstallationId();
+
+                // 開封通知登録の設定
+                // trueを設定すると、開封通知を行う
+                window.NCMB.monaca.setReceiptStatus(true);
+
+                alert("DeviceToken is registed");
+            },false);
+
+            function getInstallationId() {
+                // 登録されたinstallationのobjectIdを取得します。
+                window.NCMB.monaca.getInstallationId(
+                    function(id) {
+                       deviceId = id;
+                       
+                    }
+                );
+            }
+
+
+    if (ons.platform.isIPhoneX()) {
+      document.documentElement.setAttribute('onsflag-iphonex-portrait', '');
+      document.documentElement.setAttribute('onsflag-iphonex-landscape', '');
+    }
+
+    function sendme(mes) {
+      console.log("sendstart");
+      var ncmb = new NCMB(apiKey,cKey);
+      var push = new ncmb.Push();
+      
+      push.set("immediateDeliveryFlag", true)
+          .set("message", mes)
+          .set("target", ["android"])
+          .set("searchCondition", {
+            objectId: deviceId
+          })
+      console.log("sending");
+
+      push.send()
+          .then(function(push){
+      // 送信後処理
+            console.log(JSON.stringify(push));
+            })
+          .catch(function(err){
+       // エラー処理
+            alert(err);
+            });
+      }
+
+      function sendall(mes) {
+      console.log("sendstart");
+      var ncmb = new NCMB(apiKey,cKey);
+      var push = new ncmb.Push();
+      
+      push.set("immediateDeliveryFlag", true)
+          .set("message", mes)
+          .set("target", ["android"]);
+          
+      console.log("sending");
+
+      push.send()
+          .then(function(push){
+      // 送信後処理
+            console.log(JSON.stringify(push));
+            })
+          .catch(function(err){
+       // エラー処理
+            alert(err);
+            });
+      }
+
+  </script>
+</head>
+<body>
+      <h1>push通知サンプル</h1>
+      <!-- <input type="button" onClick="getInstallationId()" value="getInstallationID" /> -->
+      <h2>個別通知</h2>
+      <input type="button" onClick="sendme('わんわん')" value="わんわん" />
+      <input type="button" onClick="sendme('え、どこいった？')" value="え、どこいった" />
+      <input type="button" onClick="sendme('いつ帰るの？')" value="いつ帰るの？" />
+      <input type="button" onClick="sendme('連絡先消すね')" value="連絡先消すね" />
+      <h2>全体通知</h2>
+      <input type="button" onClick="sendall('はらへった')" value="はらへった" />
+
+</body>
+</html>
